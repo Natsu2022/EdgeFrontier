@@ -21,6 +21,7 @@
     "express-session": "^1.18.1",
     "fs": "^0.0.1-security",
     "mongodb": "^6.10.0",
+    "mongoosh": "^0.0.7",
     "nodemon": "^3.1.7",
     "ws": "^8.18.0"
   }
