@@ -1,0 +1,41 @@
+{
+  "name": "cloudserver-edgefrontier",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "cra-template-js": "0.2.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-scripts": "5.0.1"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "analyze": "source-map-explorer \"build/static/js/*.js\"",
+    "format": "prettier \"**/*.{css,html,js,jsx,json,less,md,scss,ts,tsx,yml}\" -c -w",
+    "icons": "pwa-asset-generator \"src/assets/images/icons/logo.svg\" \"public/static/images/icons\" -f -i \"public/index.html\" -m \"public/manifest.json\" -o false -t png -v \"static/images/icons\"",
+    "lint": "npm run lint:eslint && npm run lint:stylelint",
+    "lint:eslint": "eslint \"**/*.{js,jsx,ts,tsx}\"",
+    "lint:stylelint": "stylelint \"**/*.{css,less,scss}\"",
+    "prebuild": "npm run format && npm run lint && npm run test:ci",
+    "serve": "serve build -s",
+    "serve:https": "serve build -s --ssl-cert \"config/ssl/cert.pem\" --ssl-key \"config/ssl/key.pem\"",
+    "setup": "npm run setup:husky && npm run setup:ssl",
+    "setup:husky": "husky install && husky add \".husky/pre-commit\" \"npx --no-install lint-staged\"",
+    "setup:ssl": "mkdirp \"config/ssl\" && mkcert -cert-file \"config/ssl/cert.pem\" -key-file \"config/ssl/key.pem\" localhost",
+    "test:ci": "cross-env CI=true npm test --env=jsdom",
+    "test:coverage": "cross-env CI=true npm test -- --coverage",
+    "test:debug": "react-scripts --inspect-brk test --no-cache --runInBand",
+    "test:watch": "npm test --watch"
+  },
+  "eslintConfig": {},
+  "browserslist": [
+    "> 0.2%",
+    "defaults ",
+    "maintained node versions",
+    "not IE 11",
+    "not op_mini all"
+  ]
+}
