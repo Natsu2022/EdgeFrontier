@@ -2,10 +2,10 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const mongoose = require('mongoose');
+const WebSocket = require('ws');
+const http = require('http');
 
 const main = require("./main.js");
-
-import { WebSocketServer } from 'ws';
 
 // Import .env file
 require('dotenv').config();
@@ -14,21 +14,25 @@ require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 8000;
 
+// Connect to MongoDB
 
-const wss = new WebSocketServer({ port: PORT });
 
-// WebSocket Server
+// Connect to WebSocket
+const wss = new WebSocket.Server({ noServer: true });
+
 wss.on('connection', function connection(ws) {
-  ws.on('error', console.error);
-
-  ws.on('message', function message(data) {
-    console.log('received: %s', data);
-  });
-
-  ws.send('something');
+    ws.on('message', function incoming(message) {
+        console.log('received: %s', message);
+    });
 });
 
-export default wss;
+WebSocket.Server.prototype.broadcast = function(data) {
+    this.clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+            client.send(data);
+        }
+    });
+}
 
 // Middleware
 app.use(cors());
