@@ -1,16 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>WebSocket Test</title>
+  <title>Dashboard</title>
 </head>
 <body>
-  <h1>WebSocket Test</h1>
-  <input type="text" id="messageInput" placeholder="Enter message">
-  <button onclick="sendMessage()">Send</button>
-  <pre id="messages"></pre>
-
+  <h1>Dashboard</h1>
+  <div id="messages"></div>
   <script>
-    const socket = new WebSocket('ws://localhost:8001');
+    const socket = new WebSocket('ws://localhost:8080');
 
     socket.onopen = function(event) {
       console.log('Connected to WebSocket server');
@@ -31,12 +28,6 @@
       console.log('WebSocket connection closed');
       document.getElementById('messages').innerText += 'WebSocket connection closed\n';
     };
-
-    function sendMessage() {
-      const message = document.getElementById('messageInput').value;
-      socket.send(message);
-      document.getElementById('messages').innerText += 'Sent: ' + message + '\n';
-    }
   </script>
 </body>
 </html>
