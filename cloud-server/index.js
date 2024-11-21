@@ -32,6 +32,13 @@ wss.on('connection', (ws) => {
 
             // Respond to client
             ws.send(`Message received and processed, Date: ${new Date().toISOString()}`);
+
+            // boradcast to all clients
+            wss.clients.forEach((client) => {
+                if (client.readyState === WebSocket.OPEN) {
+                    client.send(JSON.stringify(obj));
+                }
+            });
         } catch (err) {
             console.error('Error processing message:', err.message);
             ws.send('Error processing data');
