@@ -14,7 +14,7 @@ const bodyParser = require('body-parser');
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
 
 // WebSocket connection
 wss.on('connection', (ws) => {
@@ -49,7 +49,7 @@ wss.on('connection', (ws) => {
     ws.on('error', (err) => {
         console.error('WebSocket error:', err.message);
     });
-    
+
     // Handle client disconnection
     ws.on('close', () => {
         console.log('Client disconnected');
@@ -61,26 +61,19 @@ app.get('/', (req, res) => {
     res.send('Server is running');
 });
 
-app.post('/', (req, res) => {
-    const { username, password } = req.body;
-    console.log('username:', username);
-    console.log('password:', password);
-    res.send('Post request received');
-});
-
 app.post('/api/data', (req, res) => {
     // Extract data from the request body
     const data = req.body;
     // Log the entire request body to debug the issue
     console.log('Received request body:', JSON.stringify(data));
-    
+
         // Stream data to all clients
         wss.clients.forEach((client) => {
             if (client.readyState === WebSocket.OPEN) {
                 client.send(JSON.stringify(data));
             }
         });
-        
+
     res.send('Data sent to all clients');
 });
 
