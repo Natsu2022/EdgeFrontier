@@ -55,13 +55,16 @@ wss.on('connection', (ws) => {
 
             // Log received data
             console.log('Received data:', objArray);
+            
 
-            // Stream data to all clients
-            wss.clients.forEach((client) => {
-                if (client.readyState === WebSocket.OPEN) {
-                    client.send(JSON.stringify(objArray));
-                }
-            });
+            //*------------------------------------------------------------------------------------------
+            // send data to one client
+            // wss.clients.forEach((client) => {
+            //     if (client.readyState === WebSocket.OPEN) {
+            //         client.send(JSON.stringify(objArray));
+            //     }
+            // });
+            //*------------------------------------------------------------------------------------------
 
             //TODO---------------------------------------MongoDB-----------------------------------------
             // // Store data in MongoDB
@@ -158,7 +161,7 @@ wss.on('connection', (ws, req) => {
         ws.send('Welcome to the default WebSocket endpoint');
 
         ws.on('message', (message) => {
-            console.log('Received message on default:', message);
+            console.log('Received message on default.' );
 
             // Handle or broadcast the message
             ws.send(`Default handler received: ${message}`);
