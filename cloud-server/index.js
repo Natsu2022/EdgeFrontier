@@ -12,11 +12,11 @@ const port = process.env.PORT || 8000;
 const WebSocket = require('ws');
 const http = require('http');
 const server = http.createServer(app);
-const wss = new WebSocket.Server({ server });
+const wss = new WebSocket.Server({ noServer: true });
+const wss2 = new WebSocket.Server({ noServer: true });
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const mongodb = require('mongodb');
-
 
 
 // Load environment variables
@@ -44,7 +44,7 @@ app.use(bodyParser.json());
 
 // WebSocket connection
 wss.on('connection', (ws) => {
-    console.log('Client connected');
+    console.log('Client connected to /');
     ws.send('Welcome to the server');
 
     // Handle incoming messages
@@ -58,12 +58,12 @@ wss.on('connection', (ws) => {
             
 
             //*------------------------------------------------------------------------------------------
-            // send data to one client
-            // wss.clients.forEach((client) => {
-            //     if (client.readyState === WebSocket.OPEN) {
-            //         client.send(JSON.stringify(objArray));
-            //     }
-            // });
+            // send data to all client
+            wss.clients.forEach((client) => {
+                if (client.readyState === WebSocket.OPEN) {
+                    client.send(JSON.stringify(objArray));
+                }
+            });
             //*------------------------------------------------------------------------------------------
 
             //TODO---------------------------------------MongoDB-----------------------------------------
@@ -100,15 +100,15 @@ wss.on('connection', (ws) => {
 
     // Handle client disconnection
     ws.on('close', () => {
-        console.log('Client disconnected');
+        console.log('Client disconnected from /');
     });
 });
 
 //--------------------------------------------------------------------------------------------
 
-// ws://localhost:8000/demo endpoint
-// WebSocket connection
-wss.on('connection', (ws, req) => {
+//* ws://localhost:8000/demo endpoint
+//* WebSocket connection
+wss2.on('connection', (ws, req) => {
     const url = req.url; // Extract the URL of the WebSocket request
 
     if (url === '/demo') {
@@ -143,7 +143,13 @@ wss.on('connection', (ws, req) => {
                     "PRESSURE": Math.floor(Math.random() * 100.000)
                 }
             };
-            ws.send(JSON.stringify(data));
+            wss2.clients.forEach((client) => {
+                if (client.readyState === WebSocket.OPEN) {
+                    client.send(JSON.stringify(data));
+                    console.log('Sending data from wss2:', data);
+                }
+            });
+            
         }, 1000);
 
         // Handle errors
@@ -201,6 +207,25 @@ app.post('/api/data', (req, res) => {
     res.send('Data sent to all clients');
 });
 
+// Upgrade the HTTP server to a WebSocket server
+server.on('upgrade', (req, socket, head) => {
+    const pathname = req.url ? new URL(req.url, `http://${req.headers.host}`).pathname : "";
+
+    if (pathname === '/') {
+        wss.handleUpgrade(req, socket, head, (ws) => {
+            wss.emit('connection', ws, req);
+        });
+    } else if (pathname === '/demo') {
+        wss2.handleUpgrade(req, socket, head, (ws) => {
+            wss2.emit('connection', ws, req);
+        });
+    }
+     else {
+        socket.destroy();
+    }
+});
+
+//--------------------------------------------------------------------------------------------
 // Server listening
 server.listen(port, () => {
     console.log(`Server is running on port http://localhost:${port}`);
