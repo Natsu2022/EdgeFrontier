@@ -19,6 +19,10 @@ const bodyParser = require('body-parser');
 const mongodb = require('mongodb');
 
 
+//? another file
+const mode = require('./control.js');
+
+
 // Load environment variables
 require('dotenv').config();
 
@@ -26,20 +30,21 @@ require('dotenv').config();
 app.use(cors());
 app.use(bodyParser.json());
 
+
 //TODO---------------------------------------MongoDB-----------------------------------------
 // connect to MongoDB
-// const MongoClient = mongodb.MongoClient;
-// const uri = process.env.MONGO_URI;
-// const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+const client = new mongodb.MongoClient(process.env.MONGO_URI);
+let db;
 
-// client.connect((err) => {
-//     if (err) {
-//         console.error('Error connecting to MongoDB:', err.message);
-//     } else {
-//         console.log('Connected to MongoDB');
-//     }
-// });
-
+client
+  .connect()
+  .then(() => {
+    db = client.db("frontier");
+    console.log("Connected to MongoDB");
+  })
+  .catch((err) => {
+    console.error("MongoDB connection error:", err.message);
+  });
 //--------------------------------------------------------------------------------------------
 
 // WebSocket connection
@@ -66,25 +71,35 @@ wss.on('connection', (ws) => {
             });
             //*------------------------------------------------------------------------------------------
 
-            //TODO---------------------------------------MongoDB-----------------------------------------
+            // //TODO---------------------------------------MongoDB-----------------------------------------
             // Store data in MongoDB
             // MongoDB collection
-            // const collection = client.db('frontier').collection('data_Log');
-            // // Insert data into the collection
-            // const result = await collection.insertMany(objArray);
-            // console.log('Data stored in MongoDB:', result.insertedCount);
+              // Ensure `objArray` is an array
+              const documents = Array.isArray(objArray) ? objArray : [objArray];
+              // MongoDB collection
+              const collection = db.collection("data_log");
 
-            // // Check the total number of documents in the collection
-            // const count = await collection.countDocuments();
-            // console.log('Total number of documents:', count);
-            // if (count > 100) {
-            //     // Delete the oldest documents to keep the total count at 100
-            //     const excessCount = count - 100;
-            //     const oldestDocs = await collection.find().sort({ _id: 1 }).limit(excessCount).toArray();
-            //     const oldestIds = oldestDocs.map(doc => doc._id);
-            //     await collection.deleteMany({ _id: { $in: oldestIds } });
-            //     console.log(`Deleted ${excessCount} oldest documents to maintain a maximum of 100 documents.`);
-            // }
+              // Insert data into the collection
+              const result = await collection.insertMany(documents);
+              console.log("Data stored in MongoDB:", result.insertedCount);
+
+              // Check the total number of documents in the collection
+              const count = await collection.countDocuments();
+              console.log("Total number of documents:", count);
+              if (count > 100) {
+                //     // Delete the oldest documents to keep the total count at 100
+                const excessCount = count - 100;
+                const oldestDocs = await collection
+                  .find()
+                  .sort({ _id: 1 })
+                  .limit(excessCount)
+                  .toArray();
+                const oldestIds = oldestDocs.map((doc) => doc._id);
+                await collection.deleteMany({ _id: { $in: oldestIds } });
+                console.log(
+                  `Deleted ${excessCount} oldest documents to maintain a maximum of 100 documents.`
+                );
+              }
             //TODO---------------------------------------MongoDB-----------------------------------------
             
         } catch (err) {
@@ -226,6 +241,17 @@ server.on('upgrade', (req, socket, head) => {
 });
 
 //--------------------------------------------------------------------------------------------
+
+//TODO----------------------------------------------------------------------------------------
+
+//TODO 1. Add a new endpoint to change modes
+app.post('/checkmode', mode.checkmode);
+app.post('/mode', mode.changeMode);
+app.get('/register', mode.registerDevice);
+
+//TODO----------------------------------------------------------------------------------------
+
+
 // Server listening
 server.listen(port, () => {
     console.log(`Server is running on port http://localhost:${port}`);
