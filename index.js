@@ -40,10 +40,10 @@ client
   .connect()
   .then(() => {
     db = client.db("frontier");
-    console.log("Connected to MongoDB");
+    console.log("[MONGO]Connected to MongoDB");
   })
   .catch((err) => {
-    console.error("MongoDB connection error:", err.message);
+    console.error("[MONGO]MongoDB connection error:", err.message);
   });
 //--------------------------------------------------------------------------------------------
 
@@ -198,7 +198,6 @@ wss2.on('connection', (ws, req) => {
     }
 });
 
-
 //--------------------------------------------------------------------------------------------
 
 // Health check endpoint
@@ -245,7 +244,7 @@ server.on('upgrade', (req, socket, head) => {
 //TODO----------------------------------------------------------------------------------------
 
 //TODO 1. Add a new endpoint to change modes
-app.post('/checkmode', mode.checkmode);
+app.post('/hardware', mode.checkmode);
 app.post('/mode', mode.changeMode);
 app.get('/register', mode.registerDevice);
 
