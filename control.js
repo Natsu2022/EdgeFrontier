@@ -1,6 +1,6 @@
 // Description: This file contains the logic to check the mode of the device and change the mode of the device.
 
-const { MongoClient } = require('mongodb');
+const { MongoClient, Timestamp } = require('mongodb');
 require('dotenv').config();
 const dbURI = process.env.MONGO_URI;
 
@@ -34,6 +34,10 @@ const checkmode = async (req, res) => {
                     const device = await collection.findOne({ HardwareID: HardwareID }, { projection: { _id: 0 } });
                     if (device) {
                         console.log("Device found");
+                        //TODO: Add a Auto delete function to delete the device after 5 seconds
+
+                        //TODO: Add a activity log to the database
+                        
                         res.status(200).send(device);
                     } else {
                         console.log("Device not found");
@@ -62,8 +66,17 @@ const registerDevice = async (req, res) => {
         // Usage example
         const newID = generateHardwareID(random);
         console.log(newID); // Output: EF-xxx
-
-        const newHardwareID = { HardwareID: newID ,Mode: "SAFE", Speed: "MIDIUM"}; // Generate a new HardwareID format 001 002 or 010
+        const time = new Date();
+        const formattedTime = time.toLocaleString('en-GB', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+        }).replace(',', '');
+        const newHardwareID = { HardwareID: newID ,Mode: "SAFE", Speed: "MIDIUM", Timestamp: formattedTime }; // Generate a new HardwareID format 001 002 or 010
         console.log(newHardwareID);
 
         // connect to MongoDB
@@ -95,6 +108,7 @@ const registerDevice = async (req, res) => {
                 client.close();
             } else if (!existingDevice) {
                 console.log("[SYSTEM]: registering device");
+                
                 await collection.insertOne(newHardwareID);
                 res.status(200).send({ HardwareID: newID });
             }
@@ -180,4 +194,25 @@ const changeMode = async (req, res) => {
     }
 };
 
-module.exports = { checkmode, registerDevice, changeMode };
+const listHardware = async (req, res) => {
+    try {
+        // Connect to MongoDB
+        await client.connect();
+        const db = client.db("frontier");
+        const collection = db.collection("sessions_log");
+
+        // Find all devices
+        const devices = await collection.find({}, { projection: { _id: 0 } }).toArray();
+        if (!devices) {
+            console.log("No devices found");
+            return res.status(404).send("No devices found");
+        }
+
+        return res.status(200).send(devices);
+    } catch (error) {
+        console.log(error);
+        res.status(500).send('Internal Server Error');
+    }
+};  
+
+module.exports = { checkmode, registerDevice, changeMode, listHardware };

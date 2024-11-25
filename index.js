@@ -146,9 +146,17 @@ wss2.on('connection', (ws, req) => {
         // loop to send data every 1 seconds
         setInterval(() => {
             const time = new Date();
+            const formattedTime = time.toLocaleString('en-GB', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            }).replace(',', '');
+
             const data = {
-                "TimeStamp": time, // time stamp
-                "Event": "random event",
                 "Data": {
                     "CO2": Math.floor(Math.random() * 100.000),
                     "VOC": Math.floor(Math.random() * 100.000),
@@ -157,15 +165,18 @@ wss2.on('connection', (ws, req) => {
                     "HUMID": Math.floor(Math.random() * 100.000),
                     "PRESSURE": Math.floor(Math.random() * 100.000)
                 },
+                "Event": "random event",
+                "HardwareID": "EF-840",
+                "Mode": "PREDICTION",
                 "Prediction": {
-                    "CO2": Math.floor(Math.random() * 100.000),
-                    "VOC": Math.floor(Math.random() * 100.000),
-                    "RA": Math.floor(Math.random() * 100.000),
-                    "TEMP": Math.floor(Math.random() * 100.000),
-                    "HUMID": Math.floor(Math.random() * 100.000),
-                    "PRESSURE": Math.floor(Math.random() * 100.000)
-                }
-                
+                    "Cold": Math.floor(Math.random() * 100.000),
+                    "Dry": Math.floor(Math.random() * 100.000),
+                    "Hot": Math.floor(Math.random() * 100.000),
+                    "Normal": Math.floor(Math.random() * 100.000),
+                    "Warm": Math.floor(Math.random() * 100.000),
+                    "Wet": Math.floor(Math.random() * 100.000)
+                },
+                "TimeStamp": formattedTime, // time stamp
             };
             wss2.clients.forEach((client) => {
                 if (client.readyState === WebSocket.OPEN) {
@@ -256,7 +267,7 @@ server.on('upgrade', (req, socket, head) => {
 app.post('/hardware', mode.checkmode);
 app.post('/command', mode.changeMode);
 app.get('/register', mode.registerDevice);
-
+app.get('/list', mode.listHardware);
 //TODO----------------------------------------------------------------------------------------
 
 
