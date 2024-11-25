@@ -156,12 +156,21 @@ wss2.on('connection', (ws, req) => {
                     "TEMP": Math.floor(Math.random() * 100.000),
                     "HUMID": Math.floor(Math.random() * 100.000),
                     "PRESSURE": Math.floor(Math.random() * 100.000)
+                },
+                "Prediction": {
+                    "CO2": Math.floor(Math.random() * 100.000),
+                    "VOC": Math.floor(Math.random() * 100.000),
+                    "RA": Math.floor(Math.random() * 100.000),
+                    "TEMP": Math.floor(Math.random() * 100.000),
+                    "HUMID": Math.floor(Math.random() * 100.000),
+                    "PRESSURE": Math.floor(Math.random() * 100.000)
                 }
+                
             };
             wss2.clients.forEach((client) => {
                 if (client.readyState === WebSocket.OPEN) {
                     client.send(JSON.stringify(data));
-                    console.log('Sending data from wss2:', data);
+                    console.log('Sending data from wss2.');
                 }
             });
             
@@ -245,7 +254,7 @@ server.on('upgrade', (req, socket, head) => {
 
 //TODO 1. Add a new endpoint to change modes
 app.post('/hardware', mode.checkmode);
-app.post('/mode', mode.changeMode);
+app.post('/command', mode.changeMode);
 app.get('/register', mode.registerDevice);
 
 //TODO----------------------------------------------------------------------------------------
