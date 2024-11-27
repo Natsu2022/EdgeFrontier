@@ -4,8 +4,6 @@ const { MongoClient, Timestamp } = require('mongodb');
 require('dotenv').config();
 const dbURI = process.env.MONGO_URI;
 
-const Function = require('./function.js');
-
 // Connect to MongoDB
 const client = new MongoClient(dbURI);
 
@@ -62,7 +60,7 @@ const checkmode = async (req, res) => {
                     );
 
                     //TODO auto delete the device after 5 seconds
-                    // setTimeout(async () => {
+                    setTimeout(async () => {
                     //     const afterFiveSeconds = new Date();
                     //     const checkTimeFiveSec = afterFiveSeconds.toLocaleString('en-GB', {
                     //         year: 'numeric',
@@ -74,16 +72,20 @@ const checkmode = async (req, res) => {
                     //         hour12: false
                     //     }).replace(',', '');
                         
-                    //     const devicetime = await collection.findOne({ HardwareID: upperHardwareID });
-                    //     console.log("new", checkTimeFiveSec, "device", devicetime.OnlineTimestamp);
-                    //     if (devicetime) {
-                    //         console.log("Device time", devicetime.OnlineTimestamp);
-                    //         if (checkTimeFiveSec > devicetime.OnlineTimestamp) {
-                    //             //await collection.deleteOne({ HardwareID: upperHardwareID });
-                    //             console.log("Device deleted");
-                    //         }
-                    //     }
-                    // }, 10000);
+                        const devicetime = await collection.findOne({ HardwareID: upperHardwareID });
+                    //  console.log("new", checkTimeFiveSec, "device", devicetime.OnlineTimestamp);
+                    // if device is offline
+                        if (devicetime.OnlineTimestamp === formattedTime) {
+                            console.log("Device is offline");
+                            const offlineStatus = { Status: "Offline" };
+                            await collection.updateOne(
+                                { HardwareID: upperHardwareID },
+                                { $set: { ...offlineStatus } }
+                            );
+                            // delete the device
+                            collection.deleteOne({ HardwareID: upperHardwareID });
+                        }
+                    }, 5000);
 
                     // Add an activity log to the database
                     const activityCollection = db.collection("activity_log");
@@ -170,7 +172,7 @@ const registerDevice = async (req, res) => {
             HardwareID: newID,
             Mode: "SAFE",
             Speed: "MIDIUM",
-            Timestamp: formattedTime,
+            TimeStamp: formattedTime,
             Status: "Offline",
             OnlineTimestamp: ""
         }; // Generate a new HardwareID format 001 002 or 010
