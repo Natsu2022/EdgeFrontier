@@ -37,19 +37,19 @@ const client = new mongodb.MongoClient(process.env.MONGO_URI);
 let db;
 
 client
-  .connect()
-  .then(() => {
-    db = client.db("frontier");
-    console.log("[MONGO]Connected to MongoDB");
-  })
-  .catch((err) => {
-    console.error("[MONGO]MongoDB connection error:", err.message);
-  });
+    .connect()
+    .then(() => {
+        db = client.db("frontier");
+        console.log("[MONGO]: Connection successful");
+    })
+    .catch((err) => {
+        console.error("[MONGO]: Connection error:", err.message);
+    });
 //--------------------------------------------------------------------------------------------
 
 // WebSocket connection
 wss.on('connection', (ws) => {
-    console.log('Client connected to /');
+    // console.log('Client connected to /');
     ws.send('Welcome to the server');
 
     // Handle incoming messages
@@ -59,49 +59,32 @@ wss.on('connection', (ws) => {
             const objArray = JSON.parse(buffer.toString());
 
             // Log received data
-            console.log('Received data:', objArray);
-            
+            // console.log('Received data:', objArray);
 
-            //*------------------------------------------------------------------------------------------
-            // send data to all client
+            // Send data to all clients
             wss.clients.forEach((client) => {
                 if (client.readyState === WebSocket.OPEN) {
                     client.send(JSON.stringify(objArray));
                 }
             });
-            //*------------------------------------------------------------------------------------------
 
-            // //TODO---------------------------------------MongoDB-----------------------------------------
-            // Store data in MongoDB
+            // Ensure `objArray` is an array
+            const documents = Array.isArray(objArray) ? objArray : [objArray];
             // MongoDB collection
-              // Ensure `objArray` is an array
-              const documents = Array.isArray(objArray) ? objArray : [objArray];
-              // MongoDB collection
-              const collection = db.collection("data_log");
+            const collection = db.collection("data_log");
 
-              // Insert data into the collection
-              const result = await collection.insertMany(documents);
-              console.log("Data stored in MongoDB:", result.insertedCount);
+            // Insert data into the collection
+            const result = await collection.insertMany(documents);
+            // console.log("Data stored in MongoDB:", result.insertedCount);
 
-              // Check the total number of documents in the collection
-              const count = await collection.countDocuments();
-              console.log("Total number of documents:", count);
-              if (count > 100) {
-                //     // Delete the oldest documents to keep the total count at 100
-                const excessCount = count - 100;
-                const oldestDocs = await collection
-                  .find()
-                  .sort({ _id: 1 })
-                  .limit(excessCount)
-                  .toArray();
-                const oldestIds = oldestDocs.map((doc) => doc._id);
-                await collection.deleteMany({ _id: { $in: oldestIds } });
-                console.log(
-                  `Deleted ${excessCount} oldest documents to maintain a maximum of 100 documents.`
-                );
-              }
-            //TODO---------------------------------------MongoDB-----------------------------------------
-            
+            // Check the total number of documents in the collection
+            const count = await collection.countDocuments();
+            // console.log("Total number of documents:", count);
+
+            // Delete data if data is over 3 minutes old
+            const threeMinutesAgo = new Date(Date.now() - 3 * 60 * 1000);
+            const deleteResult = await collection.deleteMany({ Timestamp: { $lt: threeMinutesAgo } });
+            //console.log(`Deleted ${deleteResult.deletedCount} documents older than 3 minutes`);
         } catch (err) {
             console.error('Error processing message:', err.message);
             ws.send('Error processing data');
@@ -110,12 +93,12 @@ wss.on('connection', (ws) => {
 
     // Handle errors
     ws.on('error', (err) => {
-        console.error('WebSocket error:', err.message);
+        console.error('WebSocket error:', err);
     });
 
     // Handle client disconnection
     ws.on('close', () => {
-        console.log('Client disconnected from /');
+        console.log('Client disconnected from websocket server');
     });
 });
 
@@ -184,7 +167,7 @@ wss2.on('connection', (ws, req) => {
                     console.log('Sending data from wss2.');
                 }
             });
-            
+
         }, 1000);
 
         // Handle errors
@@ -202,7 +185,7 @@ wss2.on('connection', (ws, req) => {
         ws.send('Welcome to the default WebSocket endpoint');
 
         ws.on('message', (message) => {
-            console.log('Received message on default.' );
+            console.log('Received message on default.');
 
             // Handle or broadcast the message
             ws.send(`Default handler received: ${message}`);
@@ -254,7 +237,7 @@ server.on('upgrade', (req, socket, head) => {
             wss2.emit('connection', ws, req);
         });
     }
-     else {
+    else {
         socket.destroy();
     }
 });
