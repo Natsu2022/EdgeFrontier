@@ -171,7 +171,7 @@ const registerDevice = async (req, res) => {
         const newHardwareID = {
             HardwareID: newID,
             Mode: "SAFE",
-            Speed: "MIDIUM",
+            Speed: "MEDIUM",
             TimeStamp: formattedTime,
             Status: "Offline",
             OnlineTimestamp: ""
@@ -208,6 +208,30 @@ const registerDevice = async (req, res) => {
 
             // Perform the findOne query
             const existingDevice = await collection.findOne({ HardwareID: newID });
+
+            //TODO auto delete the device after 5 seconds
+            setTimeout(async () => {
+                //     const afterFiveSeconds = new Date();
+                //     const checkTimeFiveSec = afterFiveSeconds.toLocaleString('en-GB', {
+                //         year: 'numeric',
+                //         month: '2-digit',
+                //         day: '2-digit',
+                //         hour: '2-digit',
+                //         minute: '2-digit',
+                //         second: '2-digit',
+                //         hour12: false
+                //     }).replace(',', '');
+                    
+                    const devicetime = await collection.findOne({ HardwareID: newID });
+                    console.log("Device", devicetime.HardwareID);
+                // if device is offline
+                    if (devicetime.Status === "Offline") {
+                        console.log("Device is offline");
+                        
+                        // delete the device
+                        collection.deleteOne({ HardwareID: newID });
+                    }
+                }, 5000);
 
             if (existingDevice) {
                 console.log("[SYSTEM]: HardwareID already exists");
